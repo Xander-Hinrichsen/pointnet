@@ -1,3 +1,6 @@
+## My implementation of pointnet
+For the assignment, they say not to worry about the transformation blocks, but that's cringe. I'm going to implement the entire model.
+
  ## Overview
 In this assignment, you will implement a PointNet based architecture for classification and segmentation with point clouds (you don't need to worry about the tranformation blocks). Q1 and Q2 focus on implementing, training and testing models. Q3 asks you to quantitatively analyze model robustness. Q4 (extra point) involves locality. 
 
