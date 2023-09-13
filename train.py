@@ -2,13 +2,13 @@ import numpy as np
 import argparse
 import torch
 import torch.optim as optim
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 
 from models import cls_model, seg_model
 from data_loader import get_data_loader
 from utils import save_checkpoint, create_dir
 
-def train(train_dataloader, model, opt, epoch, args, writer):
+def train(train_dataloader, model, opt, epoch, args):
     
     model.train()
     step = epoch*len(train_dataloader)
@@ -20,7 +20,7 @@ def train(train_dataloader, model, opt, epoch, args, writer):
         labels = labels.to(args.device).to(torch.long)
 
         # ------ TO DO: Forward Pass ------
-        predictions = 
+        predictions = model(point_clouds)
 
         if (args.task == "seg"):
             labels = labels.reshape([-1])
@@ -36,11 +36,11 @@ def train(train_dataloader, model, opt, epoch, args, writer):
         loss.backward()
         opt.step()
 
-        writer.add_scalar('train_loss', loss.item(), step+i)
+        #writer.add_scalar('train_loss', loss.item(), step+i)
 
     return epoch_loss
 
-def test(test_dataloader, model, epoch, args, writer):
+def test(test_dataloader, model, epoch, args):
     
     model.eval()
 
@@ -55,7 +55,7 @@ def test(test_dataloader, model, epoch, args, writer):
 
             # ------ TO DO: Make Predictions ------
             with torch.no_grad():
-                pred_labels = 
+                pred_labels = model(point_clouds)
             correct_obj += pred_labels.eq(labels.data).cpu().sum().item()
             num_obj += labels.size()[0]
 
@@ -74,15 +74,17 @@ def test(test_dataloader, model, epoch, args, writer):
 
             # ------ TO DO: Make Predictions ------
             with torch.no_grad():     
-                pred_labels = 
+                pred_labels = model(point_clouds)
+                values, pred_labels = torch.max(pred_labels, dim=-1)
 
             correct_point += pred_labels.eq(labels.data).cpu().sum().item()
+            
             num_point += labels.view([-1,1]).size()[0]
 
         # Compute Accuracy of Test Dataset
         accuracy = correct_point / num_point
 
-    writer.add_scalar("test_acc", accuracy, epoch)
+    #writer.add_scalar("test_acc", accuracy, epoch)
     return accuracy
 
 
@@ -95,13 +97,13 @@ def main(args):
     create_dir('./logs')
 
     # Tensorboard Logger
-    writer = SummaryWriter('./logs/{0}'.format(args.task+"_"+args.exp_name))
+    #writer = SummaryWriter('./logs/{0}'.format(args.task+"_"+args.exp_name))
 
     # ------ TO DO: Initialize Model ------
     if args.task == "cls":
-        model = 
+        model = cls_model().to(args.device)
     else:
-        model = 
+        model = seg_model().to(args.device)
     
     # Load Checkpoint 
     if args.load_checkpoint:
@@ -128,10 +130,10 @@ def main(args):
     for epoch in range(args.num_epochs):
 
         # Train
-        train_epoch_loss = train(train_dataloader, model, opt, epoch, args, writer)
+        train_epoch_loss = train(train_dataloader, model, opt, epoch, args)
         
         # Test
-        current_acc = test(test_dataloader, model, epoch, args, writer)
+        current_acc = test(test_dataloader, model, epoch, args)
 
         print ("epoch: {}   train loss: {:.4f}   test accuracy: {:.4f}".format(epoch, train_epoch_loss, current_acc))
         
